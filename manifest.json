@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "FreeTube",
-  "version": "4.1",
-  "description": "Test",
+  "version": "4.3",
+  "description": "это расширение для браузера, предназначенное для ускорения загрузки видео на YouTube, учитывая некоторые ограничения,",
   "permissions": [
     "proxy",
     "storage",
