@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+            text-align: center;
+            background-color: #212121;
+            color: #ffffff;
+            width: 340px;
+            height: 380px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        img {
+            width: 166.77px;
+            height: 36px;
+            margin-top: 10px;
+            align-self: center;
+        }
+        .status-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        .status-label {
+            margin-right: 10px;
+        }
+        .container {
+            background-color: rgba(217, 217, 217, 0.15);
+            border-radius: 20px;
+            padding: 10px;
+            margin-top: 15px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .hashtag {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .button {
+            background-color: #FF3B30;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #D32F2F;
+        }
+        .link-button {
+            display: block;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #3949AB;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .link-button:hover {
+            background-color: #303F9F;
+        }
+        .problem-button {
+            background-color: #FF3B30;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+        .problem-button:hover {
+            background-color: #D32F2F;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<img src="icons/newyt.svg" alt="YouTube">
+<div class="status-container">
+    <span class="status-label">Статус:</span>
+    <div class="status" id="status"><status></div>
+</div>
+<div class="container">
+    <div class="hashtag">#freetube</div>
+    <button class="button">Обновить скрипт</button>
+</div>
+<button class="link-button" id="projects-button">Другие проекты от SiresMacro</button>
+<button class="problem-button" id="problem-button">Сообщить о проблеме</button>
+<div class="footer">by SiresMacro с любовью</div>
+<script src="popup.js"></script>
+</body>
+</html>
