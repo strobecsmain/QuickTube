@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <gupdate xmlns="http://www.google.com/update2/manifest">
     <app>
-        <updatecheck codebase="none" version="4.0.13" />
+        <updatecheck codebase="https://github.com/strobecsmain/FreeTube/releases/download/Testing/FreeTube.backup.zip" version="4.0.13" />
     </app>
 </gupdate>
