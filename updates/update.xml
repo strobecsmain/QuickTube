@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<gupdate xmlns="http://www.google.com/update2/manifest">
+    <app>
+        <updatecheck codebase="none" version="4.0.13" />
+    </app>
+</gupdate>
