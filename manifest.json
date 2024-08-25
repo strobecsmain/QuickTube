@@ -1,17 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "FreeTube",
-  "version": "4.3",
-  "description": "это расширение для браузера, предназначенное для ускорения загрузки видео на YouTube, учитывая некоторые ограничения,",
+  "name": "QuickTube",
+  "version": "1.0",
+  "description": "QuickTube - ускоряет youtube. ",
   "permissions": [
     "proxy",
+    "tabs",
     "storage",
-    "webRequest",
-    "webRequestAuthProvider",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "https://www.youtube.com/*"
+    "activeTab",
+    "scripting"
   ],
   "background": {
     "service_worker": "background.js"
@@ -29,10 +26,11 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "content_scripts": [
-    {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["contentScript.js"]
-    }
-  ]
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "externally_connectable": {
+    "matches": ["*://*.youtube.com/*", "*://*.googlevideo.com/*"]
+  }
 }
