@@ -1,152 +1,101 @@
-console.log("background.js started");
+// Ссылка на файл с прокси на GitHub
+const proxyUrl = "https://raw.githubusercontent.com/strobecsmain/testpys/main/pxts";
 
-const initializationDelay = 500;
+// Шаг 1: Загрузка списка прокси с GitHub
+async function loadProxies() {
+    try {
+        const response = await fetch(proxyUrl);
+        const text = await response.text();
+        const proxies = text.split('\n').map(line => line.trim()).filter(line => line);
 
-function addAuthListener() {
-    chrome.webRequest.onAuthRequired.addListener(
-        function(details, callbackFn) {
-            console.log("onAuthRequired: Received auth required event", details);
+        // Предпочтение SOCKS5, затем SOCKS4, затем HTTP/HTTPS
+        const sortedProxies = proxies.map(proxy => {
+            const [type, url] = proxy.includes("://") ? proxy.split("://") : ["http", proxy];
+            return { url: `${type}://${url}`, type };
+        }).sort((a, b) => {
+            const order = { "socks5": 1, "socks4": 2, "http": 3, "https": 3 };
+            return order[a.type] - order[b.type];
+        });
 
-            if (details.challenger.host === "proxy.uboost.click" && details.challenger.port === 60000) {
-                console.log("onAuthRequired: Sending auth credentials for proxy authentication");
-
-                callbackFn({
-                    authCredentials: {
-                        username: "youboost",
-                        password: "09806426f430"
-                    }
-                });
-
-                console.log("onAuthRequired: Auth credentials sent");
-            } else {
-                console.log("onAuthRequired: Request not for proxy, ignoring");
-                callbackFn();
-            }
-        },
-        { urls: ["<all_urls>"] },
-        ['asyncBlocking']
-    );
-
-    const authListenerSetTime = Date.now();
-    chrome.storage.local.set({ authListenerSetTime }, function() {
-        console.log("addAuthListener: Listener added at ", authListenerSetTime);
-    });
-}
-
-chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && 'targetState' in changes) {
-        toggleProxy();
+        return sortedProxies;
+    } catch (error) {
+        console.error("Ошибка загрузки списка прокси:", error);
+        return [];
     }
-    if (area === 'local' && 'currentState' in changes) {
-        updateIcon(changes.currentState.newValue);
+}
+
+// Шаг 2: Тестирование прокси
+function testProxy(proxy) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = `http://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png?proxy=${proxy.url}`;
+        img.onload = () => resolve({ proxy, success: true });
+        img.onerror = () => resolve({ proxy, success: false });
+    });
+}
+
+// Шаг 3: Определение лучшего прокси
+async function findBestProxy(proxyList) {
+    console.log("Starting proxy test...");
+    const results = await Promise.all(proxyList.map(testProxy));
+    const successfulProxies = results.filter(result => result.success);
+    console.log(`Total proxies tested: ${results.length}`);
+    console.log(`Working proxies found: ${successfulProxies.length}`);
+
+    if (successfulProxies.length > 0) {
+        const bestProxy = successfulProxies[0].proxy;
+        console.log(`Best proxy selected: ${bestProxy.url} (${bestProxy.type.toUpperCase()})`);
+        return bestProxy;
+    } else {
+        throw new Error("No working proxies found");
     }
-});
-
-function updateIcon(currentState) {
-    chrome.storage.local.get(['theme'], (result) => {
-        let iconPath;
-        if (currentState === 'connected') {
-            iconPath = 'icons/icon128.png';
-        } else {
-            iconPath = result.theme === 'light' ? 'icons/icon128-disabled-light.png' : 'icons/icon128-disabled-dark.png';
-        }
-        chrome.action.setIcon({ path: iconPath });
-    });
 }
 
-function incrementProxyConnectionCount() {
-    chrome.storage.local.get('connectionCount', (result) => {
-        const count = result.connectionCount || 0;
-        chrome.storage.local.set({ 'connectionCount': count + 1 });
-        console.log("incrementProxyConnectionCount: New connection count = ", count + 1);
-    });
-}
+// Шаг 4: Подключение к лучшему прокси
+async function connectToBestProxy() {
+    try {
+        const initialIP = await getCurrentIPAddress();
+        console.log(`Initial IP address: ${initialIP}`);
 
-function initProxy() {
-    chrome.storage.local.get(["targetState", "passwordValidated"], ({ targetState }) => {
-        console.log("initProxy: State loaded from storage, targetState = ", targetState);
-
-        if (typeof targetState === 'undefined') {
-            targetState = 'connected';
-            chrome.storage.local.set({ targetState });
-        }
-
-        if (targetState === 'connected') {
-            chrome.storage.local.set({ currentState: 'connecting' });
-            setTimeout(toggleProxy, initializationDelay);
-        } else {
-            disableProxy();
-        }
-    });
-}
-
-function toggleProxy() {
-    chrome.storage.local.get("targetState", ({ targetState }) => {
-        if (targetState === 'connected') {
-            enableProxy();
-        } else {
-            disableProxy();
-        }
-    });
-}
-
-function enableProxy() {
-    chrome.storage.local.get(["authListenerSetTime"], (items) => {
-        chrome.storage.local.set({ currentState: 'connecting' });
-
-        const currentTime = Date.now();
-        const authListenerSetTime = items.authListenerSetTime || 0;
-        const timeElapsed = currentTime - authListenerSetTime;
-
-        if (timeElapsed < initializationDelay) {
-            const remainingDelay = initializationDelay - timeElapsed;
-            setTimeout(toggleProxy, remainingDelay);
-            return;
-        }
+        const proxyList = await loadProxies();
+        const bestProxy = await findBestProxy(proxyList);
 
         chrome.proxy.settings.set({
             value: {
                 mode: "pac_script",
                 pacScript: {
                     data: `
-                        function FindProxyForURL(url, host) {
-                            if (dnsDomainIs(host, ".googlevideo.com")) {
-                                return "PROXY proxy.uboost.click:60000";
-                            }
-                            if (dnsDomainIs(host, ".youtube.com")) {
-                                return "PROXY proxy.uboost.click:60000";
-                            }
-                            if (dnsDomainIs(host, "yt3.ggpht.com")) {
-                                return "PROXY proxy.uboost.click:60000";
-                            }
-                            return "DIRECT";
+                    function FindProxyForURL(url, host) {
+                        if (dnsDomainIs(host, ".googlevideo.com") ||
+                            dnsDomainIs(host, ".youtube.com") ||
+                            dnsDomainIs(host, ".ytimg.com") ||
+                            dnsDomainIs(host, ".ggpht.com")) {
+                            return "${bestProxy.type.toUpperCase()} ${bestProxy.url}";
                         }
-                    `
+                        return "DIRECT";
+                    }`
                 }
             },
             scope: 'regular'
-        }, () => {
-            if (chrome.runtime.lastError) {
-                chrome.storage.local.set({ currentState: 'error' });
-                console.error('enableProxy: Error setting proxy:', chrome.runtime.lastError.message);
-            } else {
-                chrome.storage.local.set({ currentState: 'connected' });
-                incrementProxyConnectionCount();
-            }
         });
-    });
+
+        // Проверка IP после подключения к прокси
+        setTimeout(async () => {
+            const newIP = await getCurrentIPAddress();
+            console.log(`New IP address after connecting to proxy: ${newIP}`);
+        }, 5000); // Даем время для применения настроек прокси
+
+    } catch (e) {
+        console.error(e);
+    }
 }
 
-function disableProxy() {
-    chrome.proxy.settings.clear({ scope: 'regular' }, () => {
-        if (chrome.runtime.lastError) {
-            chrome.storage.local.set({ currentState: 'error' });
-            console.error('disableProxy: Error clearing proxy settings:', chrome.runtime.lastError.message);
-        } else {
-            chrome.storage.local.set({ currentState: 'disconnected' });
-        }
-    });
+// Функция получения текущего IP-адреса
+async function getCurrentIPAddress() {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip;
 }
 
-addAuthListener();
-initProxy();
+// Запуск при установке расширения
+chrome.runtime.onInstalled.addListener(connectToBestProxy);
