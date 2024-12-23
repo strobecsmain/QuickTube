@@ -13,6 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Обработчик кнопки "Сообщить о проблеме"
     document.getElementById("problem-button").addEventListener("click", function() {
-        chrome.tabs.create({ url: "https://t.me/SiresMacro" });
+        chrome.tabs.create({ url: "https://t.me/QuickNet_solution" });
     });
 });
